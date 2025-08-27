@@ -494,10 +494,10 @@ A: 检查绑定码是否正确，以及孩子是否将可见性设置为"隐藏"
 
 ## 👥 开发团队
 
-- **项目负责人**: [@yourname](https://github.com/yourname)
-- **后端开发**: [@backend-dev](https://github.com/backend-dev)
-- **前端开发**: [@frontend-dev](https://github.com/frontend-dev)
-- **UI/UX 设计**: [@designer](https://github.com/designer)
+- **项目负责人**: [zczczqzh9@ucl.ac.uk](mailto:zczczqzh9@ucl.ac.uk)
+- **后端开发**: [zczczqzh9@ucl.ac.uk](mailto:zczczqzh9@ucl.ac.uk)
+- **前端开发**: [zczczqzh9@ucl.ac.uk](mailto:zczczqzh9@ucl.ac.uk)
+- **UI/UX 设计**: [zczczqzh9@ucl.ac.uk](mailto:zczczqzh9@ucl.ac.uk)
 
 <a id="thanks"></a>
 
