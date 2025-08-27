@@ -1,0 +1,49 @@
+name: Deploy Expo Web to gh-pages branch
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'liuxuejia-home-school-app/frontend/**'
+      - '.github/workflows/deploy-gh-pages.yml'
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        working-directory: liuxuejia-home-school-app/frontend
+        run: npm install
+
+      - name: Export Expo Web (relative base URL)
+        working-directory: liuxuejia-home-school-app/frontend
+        env:
+          EXPO_NO_TELEMETRY: '1'
+        run: npx expo export --platform web --output-dir dist --base-url .
+
+      - name: Add 404 fallback and disable Jekyll
+        working-directory: liuxuejia-home-school-app/frontend/dist
+        run: |
+          cp index.html 404.html
+          touch .nojekyll
+
+      - name: Deploy to gh-pages branch
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: liuxuejia-home-school-app/frontend/dist
+          publish_branch: gh-pages
+          force_orphan: true
+
+
