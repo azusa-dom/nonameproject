@@ -516,22 +516,7 @@ A: 检查绑定码是否正确，以及孩子是否将可见性设置为"隐藏"
 
 <a id="contact"></a>
 
-## 📞 联系我们
+## 📞 联系我
 
 - **邮箱**: zczczqzh9@ucl.ac.uk
-- **官网**: [student-home-school.com](https://student-home-school.com)
-- **微信群**: 扫码加入开发者交流群
 
-<p align="center">
-  <img src="https://via.placeholder.com/200x200/8B5CF6/FFFFFF?text=WeChat+QR" alt="微信群二维码" width="200">
-</p>
-
----
-
-<p align="center">
-  Made with ❤️ for international students and their families
-</p>
-
-<p align="center">
-  <a href="#readme">⬆️ 回到顶部</a>
-</p>
