@@ -494,10 +494,9 @@ A: 检查绑定码是否正确，以及孩子是否将可见性设置为"隐藏"
 
 ## 👥 开发团队
 
-- **项目负责人**: [zczczqzh9@ucl.ac.uk](mailto:zczczqzh9@ucl.ac.uk)
-- **后端开发**: [zczczqzh9@ucl.ac.uk](mailto:zczczqzh9@ucl.ac.uk)
-- **前端开发**: [zczczqzh9@ucl.ac.uk](mailto:zczczqzh9@ucl.ac.uk)
-- **UI/UX 设计**: [zczczqzh9@ucl.ac.uk](mailto:zczczqzh9@ucl.ac.uk)
+- **后端开发**: [zczqzh9@ucl.ac.uk](mailto:zczqzh9@ucl.ac.uk)
+- **前端开发**: [zczqzh9@ucl.ac.uk](mailto:zczqzh9@ucl.ac.uk)
+- **UI/UX 设计**: [zczqzh9@ucl.ac.uk](mailto:zczqzh9@ucl.ac.uk)
 
 <a id="thanks"></a>
 
