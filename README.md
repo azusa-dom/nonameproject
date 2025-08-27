@@ -61,8 +61,8 @@
 
 ```bash
 # 1. 克隆项目
-git clone https://github.com/yourusername/student-home-school-app.git
-cd student-home-school-app
+git clone https://github.com/azusa-dom/nonameproject.git
+cd nonameproject
 
 # 2. 安装前端依赖
 cd frontend
@@ -477,7 +477,7 @@ A: 检查绑定码是否正确，以及孩子是否将可见性设置为"隐藏"
 
 ### 提交 Bug 报告
 
-请通过 [GitHub Issues](https://github.com/yourusername/student-home-school-app/issues) 提交问题，并包含：
+请通过 [GitHub Issues](https://github.com/azusa-dom/nonameproject/issues) 提交问题，并包含：
 
 - 🔍 **详细描述**：问题的具体表现
 - 📱 **设备信息**：操作系统、App 版本
