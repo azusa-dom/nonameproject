@@ -1,0 +1,65 @@
+name: Deploy Expo Web to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'liuxuejia-home-school-app/frontend/**'
+      - '.github/workflows/deploy-pages.yml'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+          cache-dependency-path: liuxuejia-home-school-app/frontend/package-lock.json
+
+      - name: Install dependencies
+        working-directory: liuxuejia-home-school-app/frontend
+        run: npm ci
+
+      - name: Export Expo Web (relative base URL)
+        working-directory: liuxuejia-home-school-app/frontend
+        env:
+          EXPO_NO_TELEMETRY: '1'
+        run: npx expo export --platform web --output-dir dist --base-url .
+
+      - name: Add 404 fallback and disable Jekyll
+        working-directory: liuxuejia-home-school-app/frontend/dist
+        run: |
+          cp index.html 404.html
+          touch .nojekyll
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: liuxuejia-home-school-app/frontend/dist
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+
+
