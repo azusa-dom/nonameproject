@@ -1,0 +1,16 @@
+{
+  "name": "liuxuejia-home-school-app",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "backend",
+    "frontend"
+  ],
+  "scripts": {
+    "dev:backend": "npm --workspace backend run dev",
+    "dev:frontend": "npm --workspace frontend run start",
+    "start:backend": "npm --workspace backend run start"
+  }
+}
+
+

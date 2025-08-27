@@ -1,0 +1,23 @@
+version: '3.9'
+services:
+  mongo:
+    image: mongo:6
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+  backend:
+    build: ./backend
+    command: npm start
+    environment:
+      - MONGODB_URI=mongodb://mongo:27017/liuxuejia
+      - JWT_SECRET=dev
+      - PORT=3000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongo
+volumes:
+  mongo-data:
+
+

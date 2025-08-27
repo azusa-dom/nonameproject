@@ -423,4 +423,219 @@ app.post('/api/auth/register', async (req, res) => {
       parentBindingCode,
     });
 
-    await user.save
+    await user.save(); // 完成 save 调用
+    const token = jwt.sign({ userId: user.id, userType }, JWT_SECRET, { expiresIn: '30d' });
+
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        userType: user.userType,
+        parentBindingCode: user.parentBindingCode,
+      },
+    });
+  } catch (error) {
+    console.error('注册错误:', error);
+    res.status(500).json({ error: '服务器错误' });
+  }
+});
+
+// 邮箱授权
+app.post('/api/auth/email', authenticateToken, async (req, res) => {
+  try {
+    const { provider, authCode } = req.body;
+    const user = await User.findOne({ id: req.user.userId });
+
+    if (!user) return res.status(404).json({ error: '用户不存在' });
+
+    let tokenData;
+    if (provider === 'gmail') {
+      const { tokens } = await googleAuth.getToken(authCode);
+      tokenData = { accessToken: tokens.access_token, refreshToken: tokens.refresh_token, tokenExpiry: new Date(tokens.expiry_date) };
+    } else if (provider === 'outlook') {
+      const tokenRequest = { code: authCode, scopes: ['https://graph.microsoft.com/mail.read'], redirectUri: process.env.AZURE_REDIRECT_URI };
+      const response = await msalClient.acquireTokenByCode(tokenRequest);
+      tokenData = { accessToken: response.accessToken, refreshToken: response.refreshToken, tokenExpiry: new Date(response.expiresOn) };
+    }
+
+    user.emailProvider = provider;
+    user.accessToken = tokenData.accessToken;
+    user.refreshToken = tokenData.refreshToken;
+    user.tokenExpiry = tokenData.tokenExpiry;
+    await user.save();
+
+    setTimeout(() => syncUserEmails(user.id), 1000);
+    res.json({ success: true, message: '邮箱授权成功' });
+  } catch (error) {
+    console.error('邮箱授权错误:', error);
+    res.status(500).json({ error: '授权失败' });
+  }
+});
+
+// 同步邮件
+app.post('/api/sync-emails', authenticateToken, async (req, res) => {
+  try {
+    const events = await syncUserEmails(req.user.userId);
+    res.json({ success: true, count: events.length, events });
+  } catch (error) {
+    console.error('同步邮件错误:', error);
+    res.status(500).json({ error: '同步失败' });
+  }
+});
+
+// 获取事件列表
+app.get('/api/events', authenticateToken, async (req, res) => {
+  try {
+    const { type, status, limit = 50, visibility } = req.query;
+    const query = { userId: req.user.userId };
+    if (type) query.type = type;
+    if (status) query.status = status;
+
+    let events = await Event.find(query)
+      .sort({ createdAt: -1, start_at: 1, due_at: 1 })
+      .limit(parseInt(limit));
+
+    if (req.user.userType === 'parent') {
+      events = events.map(event => {
+        const visibleFields = {
+          id: event.id,
+          type: event.type,
+          title: event.title,
+          course: event.course,
+          start_at: event.start_at,
+          end_at: event.end_at,
+          due_at: event.due_at,
+          status: event.status,
+        };
+        if (event.visibility.parent === 'summary_only') {
+          return visibleFields;
+        } else if (event.visibility.parent === 'full') {
+          return event.toObject();
+        }
+        return null;
+      }).filter(Boolean);
+    }
+
+    res.json(events);
+  } catch (error) {
+    console.error('获取事件错误:', error);
+    res.status(500).json({ error: '获取失败' });
+  }
+});
+
+// 更新事件状态
+app.put('/api/events/:eventId', authenticateToken, async (req, res) => {
+  try {
+    const { eventId } = req.params;
+    const updates = req.body;
+
+    const event = await Event.findOne({ id: eventId, userId: req.user.userId });
+    if (!event) return res.status(404).json({ error: '事件不存在' });
+
+    Object.assign(event, updates);
+    event.updatedAt = new Date();
+    await event.save();
+
+    res.json(event);
+  } catch (error) {
+    console.error('更新事件错误:', error);
+    res.status(500).json({ error: '更新失败' });
+  }
+});
+
+// 家长绑定
+app.post('/api/parent/bind', authenticateToken, async (req, res) => {
+  try {
+    const { bindingCode } = req.body;
+    if (req.user.userType !== 'parent') return res.status(400).json({ error: '只有家长可以绑定孩子' });
+
+    const student = await User.findOne({ parentBindingCode: bindingCode });
+    if (!student) return res.status(404).json({ error: '无效绑定码' });
+
+    if (!student.parents) student.parents = [];
+    if (!student.parents.includes(req.user.userId)) {
+      student.parents.push(req.user.userId);
+      await student.save();
+    }
+
+    if (!req.user.children) req.user.children = [];
+    if (!req.user.children.includes(student.id)) {
+      req.user.children.push(student.id);
+      await User.findOneAndUpdate({ id: req.user.userId }, req.user);
+    }
+
+    res.json({ success: true, message: '绑定成功' });
+  } catch (error) {
+    console.error('家长绑定错误:', error);
+    res.status(500).json({ error: '绑定失败' });
+  }
+});
+
+// 获取用户设置
+app.get('/api/settings', authenticateToken, async (req, res) => {
+  try {
+    const user = await User.findOne({ id: req.user.userId });
+    if (!user) return res.status(404).json({ error: '用户不存在' });
+
+    res.json({
+      notifications: user.settings.notifications,
+      quietHours: user.settings.quietHours,
+      timezone: user.timezone,
+    });
+  } catch (error) {
+    console.error('获取设置错误:', error);
+    res.status(500).json({ error: '获取失败' });
+  }
+});
+
+// 更新用户设置
+app.put('/api/settings', authenticateToken, async (req, res) => {
+  try {
+    const { notifications, quietHours, timezone } = req.body;
+    const user = await User.findOne({ id: req.user.userId });
+    if (!user) return res.status(404).json({ error: '用户不存在' });
+
+    if (notifications !== undefined) user.settings.notifications = notifications;
+    if (quietHours) user.settings.quietHours = quietHours;
+    if (timezone) user.timezone = timezone;
+
+    await user.save();
+    res.json({ success: true, message: '设置更新成功' });
+  } catch (error) {
+    console.error('更新设置错误:', error);
+    res.status(500).json({ error: '更新失败' });
+  }
+});
+
+// 运营端 - 获取用户统计
+app.get('/api/admin/stats', authenticateToken, async (req, res) => {
+  try {
+    if (req.user.userType !== 'admin') return res.status(403).json({ error: '无权限' });
+
+    const userCount = await User.countDocuments();
+    const activeUsers = await User.countDocuments({ lastSyncAt: { $gte: moment().subtract(7, 'days').toDate() } });
+    const eventCount = await Event.countDocuments();
+
+    res.json({
+      totalUsers: userCount,
+      activeUsers,
+      totalEvents: eventCount,
+    });
+  } catch (error) {
+    console.error('获取统计数据错误:', error);
+    res.status(500).json({ error: '获取失败' });
+  }
+});
+
+// 错误处理中间件
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ error: '服务器内部错误' });
+});
+
+// 启动服务器
+app.listen(PORT, () => {
+  console.log(`服务器运行在端口 ${PORT}`);
+});
